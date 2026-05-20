@@ -55,32 +55,32 @@ Node* buildExpressionTree(string postfix) {
         Node* t = createNode(c);
         if (isalpha(c)) { // Nếu là nút lá (toán hạng)
             s.push(t);
-        } else { // Nếu là toán tử -> lấy 2 nút trên cùng của stack làm con
+        } else { 
             t->right = s.top(); s.pop();
             t->left = s.top(); s.pop();
             s.push(t);
         }
     }
-    return s.top(); // Nút gốc của cây biểu thức
+    return s.top(); // Nút gốc của cây 
 }
 //  hàm duyệt cây
-void preOrder(Node* root) { // Duyệt trước (NLR) -> Biểu thức Tiền tố
+void preOrder(Node* root) { // Duyệt trước tiền tố
     if (root != NULL) {
         cout << root->data << " ";
         preOrder(root->left);
         preOrder(root->right);
     }
 }
-void inOrder(Node* root) { // Duyệt giữa (LNR) -> Biểu thức Trung tố
+void inOrder(Node* root) { // Duyệt giữa trung tố
     if (root != NULL) {
-        if (!isalpha(root->data)) cout << "( "; // Thêm ngoặc cho dễ nhìn
+        if (!isalpha(root->data)) cout << "( "; 
         inOrder(root->left);
         cout << root->data << " ";
         inOrder(root->right);
         if (!isalpha(root->data)) cout << ") ";
     }
 }
-void postOrder(Node* root) { // Duyệt sau (LRN) -> Biểu thức Hậu tố
+void postOrder(Node* root) { // Duyệt sau biểu thức Hậu tố
     if (root != NULL) {
         postOrder(root->left);
         postOrder(root->right);
@@ -98,17 +98,15 @@ int main() {
     string infix = "(a*b+c)/d-(e*f-h)^g";
     //Chuyển sang hậu tố
     string postfix = infixToPostfix(infix);
-    //Dựng cây
     Node* root = buildExpressionTree(postfix);
-    //In kết quả duyệt
     cout << "Bieu thuc goc: " << infix << "\n\n";
-    cout << "Duyet truoc (Pre-order): ";
+    cout << "Duyet truoc: ";
     preOrder(root); 
     cout << "\n\n";
-    cout << "Duyet giua  (In-order) : ";
+    cout << "Duyet giua: ";
     inOrder(root); 
     cout << "\n\n";
-    cout << "Duyet sau   (Post-order): ";
+    cout << "Duyet sau: ";
     postOrder(root); 
     cout << "\n";
     freeTree(root);
