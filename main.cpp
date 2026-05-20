@@ -1,63 +1,63 @@
 #include <iostream>
-#include <cmath>
+#include <vector>
 using namespace std;
 const int N = 31; // Số lượng phần tử từ 1 đến 31
-// 1.cau truc luu tru tuan tu
-struct ArrayTree {
-    int data[2000]; 
-    int maxIndex;   
+struct DynamicArrayTree {
+    vector<int> data; 
 };
-void initArrayTree(ArrayTree &t) {
-    for(int i = 0; i < 2000; i++) {
-        t.data[i] = -1; 
-    }
-    t.maxIndex = 0;
+// Khởi tạo mảng động (bỏ qua index 0)
+void initArrayTree(DynamicArrayTree &t) {
+    t.data.clear();
+    t.data.push_back(-1); 
 }
-// 1.1 Cài đặt cây đầy đủ bằng mảng
-void buildFullTreeArray(ArrayTree &t) {
+// 1.1 Cài đặt cây đầy đủ bằng mảng động
+void buildFullTreeArray(DynamicArrayTree &t) {
     initArrayTree(t);
+    t.data.resize(N + 1, -1); 
     for(int i = 1; i <= N; i++) {
-        t.data[i] = i; // Nút i nằm đúng vị trí i luôn
+        t.data[i] = i; 
     }
-    t.maxIndex = N;
 }
-// 1.2 Cài đặt cây lệch trái bằng mảng
-void buildLeftSkewedArray(ArrayTree &t) {
+// 1.2 Cài đặt cây lệch trái bằng mảng động
+void buildLeftSkewedArray(DynamicArrayTree &t) {
     initArrayTree(t);
-    int currentIndex = 1; // Gốc ở 1
+    int currentIndex = 1; 
     for(int val = 1; val <= N; val++) {
-        t.data[currentIndex] = val;
-        t.maxIndex = currentIndex;
-        currentIndex = 2 * currentIndex; // Con trái luôn là 2*i
-    }
-}
-// 1.3 Cài đặt cây lệch phải bằng mảng
-void buildRightSkewedArray(ArrayTree &t) {
-    initArrayTree(t);
-    int currentIndex = 1; // Gốc ở 1
-    for(int val = 1; val <= N; val++) {
-        t.data[currentIndex] = val;
-        t.maxIndex = currentIndex;
-        currentIndex = 2 * currentIndex + 1; // Con phải luôn là 2*i + 1
-    }
-}
-
-// In mảng lưu trữ để giáo viên thấy sự lãng phí bộ nhớ của cây lệch
-void printArrayTreeRaw(ArrayTree t) {
-    cout << "Cac vi tri thuc te trong mang (chi in 1 so vi tri dau/cuoi):\n";
-    for(int i = 1; i <= t.maxIndex; i++) {
-        if(t.data[i] != -1) {
-            cout << "Index [" << i << "]: " << t.data[i] << " | ";
+        if (currentIndex > 2000) break; // Chặn an toàn
+        if (currentIndex >= t.data.size()) {
+            t.data.resize(currentIndex + 1, -1);
         }
+        t.data[currentIndex] = val;
+        currentIndex = 2 * currentIndex; 
     }
-    cout << "\n-> Chi so lon nhat phai dung trong mang: " << t.maxIndex << "\n";
 }
-//2. cai truc luu tru moc noi
+// 1.3 Cài đặt cây lệch phải bằng mảng động
+void buildRightSkewedArray(DynamicArrayTree &t) {
+    initArrayTree(t);
+    int currentIndex = 1; 
+    for(int val = 1; val <= N; val++) {
+        if (currentIndex > 2000) break; // Chặn an toàn
+        if (currentIndex >= t.data.size()) {
+            t.data.resize(currentIndex + 1, -1);
+        }
+        t.data[currentIndex] = val;
+        currentIndex = 2 * currentIndex + 1; 
+    }
+}
+void printArrayTreeInfo(DynamicArrayTree t, string name) {
+    cout << name << " -> Kich thuoc mang dong can dung: " << t.data.size() - 1 << " o nho.\n";
+    cout << "Cac phan tu thuc te: ";
+    for(size_t i = 1; i < t.data.size(); i++) {
+        if(t.data[i] != -1) cout << t.data[i] << " ";
+    }
+}
 struct Node {
     int data;
     Node* left;
     Node* right;
 };
+
+// Hàm tạo nút mới
 Node* createNode(int val) {
     Node* newNode = new Node();
     newNode->data = val;
@@ -65,21 +65,17 @@ Node* createNode(int val) {
     newNode->right = NULL;
     return newNode;
 }
+
 // 2.1 Cài đặt cây đầy đủ bằng con trỏ
 Node* buildFullTreeLinked() {
     Node* refs[N + 1];
-    // Tạo sẵn các nút
-    for(int i = 1; i <= N; i++) {
-        refs[i] = createNode(i);
-    }
-    // Nối các nút lại theo quy thức 2*i và 2*i+1
+    for(int i = 1; i <= N; i++) refs[i] = createNode(i);
     for(int i = 1; i <= N / 2; i++) {
-        if(2 * i <= N)   refs[i]->left = refs[2 * i];
+        if(2 * i <= N)     refs[i]->left = refs[2 * i];
         if(2 * i + 1 <= N) refs[i]->right = refs[2 * i + 1];
     }
-    return refs[1]; // Trả về nút gốc
+    return refs[1];
 }
-
 // 2.2 Cài đặt cây lệch trái bằng con trỏ
 Node* buildLeftSkewedLinked() {
     Node* root = createNode(1);
@@ -100,22 +96,22 @@ Node* buildRightSkewedLinked() {
     }
     return root;
 }
-// 2.4 Cài đặt cây Zigzac bằng con trỏ (Trái -> Phải -> Trái...)
+// 2.4 Cài đặt cây Zigzac bằng con trỏ
 Node* buildZigzagLinked() {
     Node* root = createNode(1);
     Node* current = root;
     for(int i = 2; i <= N; i++) {
-        if(i % 2 == 0) { // Bước chẵn dạt sang trái
+        if(i % 2 == 0) {
             current->left = createNode(i);
             current = current->left;
-        } else {         // Bước lẻ dạt sang phải
+        } else {
             current->right = createNode(i);
             current = current->right;
         }
     }
     return root;
 }
-// Hàm duyệt cây theo thứ tự trước (Pre-order) để kiểm tra cấu trúc móc nối
+// Duyệt Pre-order
 void preOrder(Node* root) {
     if(root != NULL) {
         cout << root->data << " ";
@@ -123,45 +119,35 @@ void preOrder(Node* root) {
         preOrder(root->right);
     }
 }
-
-// Hàm giải phóng bộ nhớ cây con trỏ
+// Giải phóng bộ nhớ cây con trỏ
 void freeTree(Node* root) {
     if(root == NULL) return;
     freeTree(root->left);
     freeTree(root->right);
     delete root;
 }
+
 int main() {
-    cout << "CAU TRUC LUU TRU TUAN TU \n";
-    ArrayTree arrTree;
-    cout << "\n[1.1] Cay day du (Array):";
+    cout << "CAU TRUC LUU TRU TUAN TU\n";
+    DynamicArrayTree arrTree;
     buildFullTreeArray(arrTree);
-    printArrayTreeRaw(arrTree);
-    cout << "\n[1.2] Cay lech trai (Array):";
-    buildLeftSkewedArray(arrTree);
-    printArrayTreeRaw(arrTree);
-    cout << "\n[1.3] Cay lech phai (Array):";
-    buildRightSkewedArray(arrTree);
-    printArrayTreeRaw(arrTree);
-    cout << "CAU TRUC LUU TRU MOC NOI )\n";
-    cout << "\n[2.1] Cay day du duyet Pre-order: ";
-    Node* linkedFull = buildFullTreeLinked();
-    preOrder(linkedFull); cout << "\n";
-    cout << "[2.2] Cay lech trai duyet Pre-order: ";
-    Node* linkedLeft = buildLeftSkewedLinked();
-    preOrder(linkedLeft); cout << "\n";
-    cout << "[2.3] Cay lech phai duyet Pre-order: ";
-    Node* linkedRight = buildRightSkewedLinked();
-    preOrder(linkedRight); cout << "\n";
-    cout << "[2.4] Cay Zigzac duyet Pre-order: ";
-    Node* linkedZigzag = buildZigzagLinked();
-    preOrder(linkedZigzag); cout << "\n";
-    
-    // Giải phóng con trỏ dọn dẹp bộ nhớ
-    freeTree(linkedFull);
-    freeTree(linkedLeft);
-    freeTree(linkedRight);
-    freeTree(linkedZigzag);
+    printArrayTreeInfo(arrTree, "[1.1] Cay day du");
+    buildLeftSkewedArray(arrTree);cout << "\n";
+    printArrayTreeInfo(arrTree, "[1.2] Cay lech trai");
+    buildRightSkewedArray(arrTree);cout << "\n";
+    printArrayTreeInfo(arrTree, "[1.3] Cay lech phai");cout << "\n";
+    cout << "CAU TRUC LUU TRU MOC NOI\n";
+    cout << "[2.1] Cay day du Duyet Pre-order : ";
+    Node* linkedFull = buildFullTreeLinked(); preOrder(linkedFull); cout << "\n";
+    cout << "[2.2] Cay lech trai Duyet Pre-order: ";
+    Node* linkedLeft = buildLeftSkewedLinked(); preOrder(linkedLeft); cout << "\n";
+    cout << "[2.3] Cay lech phai Duyet Pre-order: ";
+    Node* linkedRight = buildRightSkewedLinked(); preOrder(linkedRight); cout << "\n";
+    cout << "[2.4] Cay Zigzac duyet Pre-order   : ";
+    Node* linkedZigzag = buildZigzagLinked(); preOrder(linkedZigzag); cout << "\n\n";
+    // Dọn dẹp bộ nhớ con trỏ
+    freeTree(linkedFull); freeTree(linkedLeft); 
+    freeTree(linkedRight); freeTree(linkedZigzag);
     
     return 0;
 }
